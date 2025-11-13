@@ -28,7 +28,8 @@ lazy_static = '1.4.0'
 # just to fix building of rand for WASM:
 getrandom = { default-features = false, features = [ 'js' ], version = '0.2.2' }
 
-tvm_client = { default-features = false, features = [ 'wasm' ], git = 'https://github.com/tvmlabs/tvm-sdk.git', tag = 'v2.0.2.an'}
+tvm_client = { default-features = false, features = [ 'wasm' ], git = 'https://github.com/tvmlabs/tvm-sdk.git', tag = 'v2.24.3-rc.an'}
+#tvm_client = { default-features = false, features = [ 'wasm' ], path = '/home/ilyar/code/tvm/tvm-sdk/tvm_client'}
 
 [dependencies.web-sys]
 version = '0.3.57'
