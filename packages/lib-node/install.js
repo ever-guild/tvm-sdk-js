@@ -22,12 +22,11 @@ const path = require('path');
 const os = require('os');
 const platform = os.platform();
 const arch = os.arch();
-
 const binariesSource =
-  process.env.TON_CLIENT_BIN_SRC || 'https://binaries.tonlabs.io';
+  process.env.TON_CLIENT_BIN_SRC || 'https://github.com/ever-guild/tvm-sdk-js/releases/download/v2.24.4';
 const binariesVersion =
   process.env.TON_CLIENT_BIN_VERSION ||
-  require('./package.json').version.split('.').slice(0, 2).join('_');
+  require('./package.json').version.replace(/^v/, '').split('.').slice(0, 2).join('_');
 const binariesHomePath = path.resolve(os.homedir(), '.tonlabs', 'binaries', binariesVersion);
 
 function downloadAndGunzip(dest, url) {
@@ -72,19 +71,36 @@ function downloadAndGunzip(dest, url) {
             if (protocol === 'https') {
                 net = https;
             }
-            const request = net.get(url, response => {
-                if (response.statusCode !== 200) {
-                    failed({
-                        message: `Download from ${url} failed with ${response.statusCode}: ${response.statusMessage}`,
-                    });
-                    return;
-                }
-                response.pipe(unzip);
+            
+            const makeRequest = (requestUrl) => {
+                const request = net.get(requestUrl, response => {
+                    // Handle redirects (301, 302, 307, 308)
+                    if (response.statusCode >= 300 && response.statusCode < 400 && response.headers.location) {
+                        response.resume(); // Consume the response to free up memory
+                        const redirectUrl = response.headers.location;
+                        // Handle relative redirects
+                        const absoluteRedirectUrl = redirectUrl.startsWith('http') 
+                            ? redirectUrl 
+                            : new URL(redirectUrl, requestUrl).href;
+                        makeRequest(absoluteRedirectUrl);
+                        return;
+                    }
+                    
+                    if (response.statusCode !== 200) {
+                        failed({
+                            message: `Download from ${requestUrl} failed with ${response.statusCode}: ${response.statusMessage}`,
+                        });
+                        return;
+                    }
+                    response.pipe(unzip);
+                });
+                
                 request.on('error', err => {
                     failed(err);
                 });
-
-            });
+            };
+            
+            makeRequest(url);
         }
 
     });
@@ -118,7 +134,7 @@ async function main() {
         return;
     }
     const binariesTargetPath = resolveBinariesTargetPath();
-    await dl(path.join(binariesTargetPath, `eversdk.node`), `eversdk_${binariesVersion}_nodejs_addon_${arch}-${platform}`);
+    await dl(path.join(binariesTargetPath, `tvmsdk.node`), `tvmsdk_${binariesVersion}_nodejs_addon_${arch}-${platform}`);
 }
 
 (async () => {

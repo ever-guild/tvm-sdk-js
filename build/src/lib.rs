@@ -79,7 +79,7 @@ impl Build {
                 target_os = "linux",
                 not(target_arch = "aarch64"),
                 not(target_arch = "armv7"),
-                not(target_arch = "powerpc64le"),
+                not(target_arch = "powerpc64"),
                 not(target_arch = "s390x")
             ))]
             platform: "x64-linux".into(),
